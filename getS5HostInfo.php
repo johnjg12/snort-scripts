@@ -1,3 +1,5 @@
+#!/usr/bin/php
+
 <?php
 /*
  * getS5HostInfo.php
@@ -166,7 +168,7 @@ $stream5_state_map_header = $colors->getColoredString(
 $stream5_state_map = "";
 //redefineMap("state");
 
-//Session Flap Map 
+//Session Flag Map 
 //define the rest of the map.  a - j will be re-used for this map
 $k0 = $l0 = $m0 = $n0 = $o0 = $p0 = $q0 = $r0 = $s0 = $t0 = $u0 = $v0 = $w0 = $x0 = $y0 = $z0 = "0";
 $k1 = $l1 = $m1 = $n1 = $o1 = $p1 = $q1 = $r1 = $s1 = $t1 = $u1 = $v1 = $w1 = $x1 = $y1 = $z1 = "|";
@@ -253,7 +255,7 @@ $longopts = array(
     "summary:", //accepts a csv file and prints a summary of the stats
     "limit:", //sets the limit for number of hosts to output
     "all-data", //pulls stats from all available lines, default will only pull prunes
-    "script-stats" //print stats of scrript (off by default)
+    "script-stats" //print stats of script (off by default)
     );
 $options = getopt($shortopts, $longopts);
 if(count($options) > 0) {
@@ -394,7 +396,7 @@ function printHelp() {
 
 function isValidHexString($hex_string) {
     $hex_check = strtolower($hex_string);
-    if(substr($hex_check, 0, 2) == "0x")//is 0x is provided ignore first 2 in checking for valid values
+    if(substr($hex_check, 0, 2) == "0x")//if 0x is provided ignore first 2 in checking for valid values
         $hex_check = substr($hex_check, 2);
     if(!ctype_xdigit($hex_check)) 
         return FALSE;
@@ -432,7 +434,7 @@ function formatBinaryString($binary, $type) {
             
     	default:
     		echo "No case for '$type'! exiting...";
-    		exit(0);
+    		exit(2);
     		break;
     }
 }
@@ -515,6 +517,8 @@ function getSummaryStats($file, $limit = 50) {
             $csv_array = explode(",", $line);
             if(count($csv_array) < 20)
                 echo "Not enough entries for line: $line\n";
+            else if($csv_array[0] === "timestamp")
+                echo "\nSkipping line $line\n"; 
             else {
                 //check times
                 if(intval($csv_array[0]) < $low_time)
@@ -650,7 +654,7 @@ function getSummaryStats($file, $limit = 50) {
         echo "Outputting to file $file_out\n";
         $out_file_handle = fopen($file_out, "w");
         
-        //printTopSorted($host_hash_counters, 'syn_no_syn_ack', $top_count);
+        printTopSorted($host_hash_counters, 'syn_no_syn_ack', $top_count);
         printTopSorted($host_hash_counters, 'syn_ack_no_syn', $top_count, $out_file_handle);
         printTopSorted($host_hash_counters, 'client_no_server_count', $top_count, $out_file_handle);
         printTopSorted($host_hash_counters, 'server_no_client_count', $top_count, $out_file_handle);
