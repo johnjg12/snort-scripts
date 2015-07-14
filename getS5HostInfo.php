@@ -15,13 +15,9 @@
 
 ini_set('memory_limit', '6000M');
 error_reporting(E_ERROR);
-if(preg_match("/sfconsole/", gethostname()))
-    require_once("PHPColors.php");
-else
- require_once("/SF/Scripts/support/lib/PHPColors.php");
+require_once("PHPColors.php");
 
 $colors = new Colors();
-date_default_timezone_set("UTC");
 
  /*
   * Global Variables
