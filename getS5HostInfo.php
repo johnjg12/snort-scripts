@@ -22,7 +22,7 @@ $colors = new Colors();
  /*
   * Global Variables
   */ 
-$VERSION = "1.3";
+$VERSION = "1.4";
 $csv_header = "timestamp,pid,srcIP,srcPort,dstIP,dstPort,appProto,s5sn,s5ss,s5ssa,s5sa,s5se,s5sdc,s5sds,s5sm,s5st,s5su,s5sc,".
               "sfsc,sfssrv,sfe,sfnmap,sfecq,sfesr,sfhttp,sfspmat,sfm,sfcf,sfsf,sfcp,sfsp,sfci,sfce,sfcc,sft,sfp,sfr,sfdc,sfds,".
               "sflqf,sfsob,sffb,sfcs,sfcsd,sfa,sfn";
@@ -301,7 +301,10 @@ if(count($options) > 0) {
                 echo "The string '" . $options["LWstate"] ."' contains non-hex values. This must be hex values only! The leading 0x is optional.\n";
                 exit(0);
             }
-            
+            //For being able to copy and paste directly from syslog without having to go back and add -- before LWFlags
+            if($argv[3] === "LWFlags" && !array_key_exists("LWFlags", $options)){
+                $options['LWFlags'] = $argv[4];
+            }
             $binary_state = base_convert($options["LWstate"], 16, 2);
             $formated_state = "    binary: " . formatBinaryString($binary_state, "state") . "\n\n";
              
