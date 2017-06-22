@@ -167,12 +167,6 @@ These options were used so that strings from literal messages could be copy an p
 Note: When running this in a terminal the map will color the flags that are set making it easier to see then the above example.
  
 
-Screen Shot 2014-12-08 at 3.54.17 PM (2).png
-
-Screen Shot 2014-12-08 at 3.54.25 PM.png
-
- 
-
 This shows a bit map for the various flags that each bit represents in the hex string.  In this example the following bits are set in the session state string:
 
 -STREAM5_STATE_SYN_ACK
@@ -240,6 +234,10 @@ $ cat CD1IPS-INTBE1A-1415332927-S5Info-54861777aaba7.csv >> all.csv
 
 $ cat CD1IPS-INTBE1A-1415160126-S5Info-548619065b14d.csv >> all.csv
 
+Or you can combine syslog message into 1 and pull out relevant S5 message:
+
+$ egrep –h “S5:” messages* >> s5Mes.out
+$ getS5HostInfo --csv s5Mes.out
 
 Step 2: Generate the summary data
 
