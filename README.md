@@ -81,7 +81,7 @@ The summary will be printed to screen (by default) as well as to the 'summary-54
 
  
 
-Detailed Usage:
+<strong>Detailed Usage</strong>
 
  
 
@@ -175,81 +175,47 @@ Screen Shot 2014-12-08 at 3.54.25 PM.png
 
 This shows a bit map for the various flags that each bit represents in the hex string.  In this example the following bits are set in the session state string:
 
- 
-
 -STREAM5_STATE_SYN_ACK
-
 -STREAM5_STATE_ACK
-
 -STREAM5_STATE_ESTABLISHED
-
 -STREAM5_STATE_TIMEDOUT
-
- 
 
 And the following flags are set in the flag string:
 
- 
-
 -STREAM5_STATE_TIMEDOUT
-
 -SSNFLAG_COUNTED_INITIALIZE
-
 -SSNFLAG_COUNTED_ESTABLISH
-
 -SSNFLAG_TIMEDOUT
-
 -SSNFLAG_LOGGED_QUEUE_FULL
 
- 
+In this example, you can see that snort only saw one side of the session (server side).  Snort never saw the initial syn from the client (STREAM5_STATE_SYN is not set), and it also never saw a single packet from the client (since SSNFLAG_SEEN_CLIENT is not set). This is the type of traffic we are looking for since it is one sided, which typically indicates asymmetric traffic (or one sided traffic from snort perspective).
 
-In this example, you can see that snort only saw one side of the session (server side).  Snort never saw the initial syn from the client (STREAM5_STATE_SYN is not set), and it also never saw a single packet from the client (since SSNFLAG_SEEN_CLIENT is not set). This is the type of traffic we are looking for since it is one sided, which typically indicates asynchrounous traffic (or one sided traffic).
 
- 
-
-Getting a summary of the data
-
- 
+<strong>Getting a summary of the data</strong>
 
 The bit maps are helpful for seeing and understanding what flags are set in specific sessions, but this would be too tedious to do for each S5 message in syslog, so the script provides a way to aggregate the data and get a summary of all of the S5 sessions logged to syslog. 
 
  
-
 Step 1: Generate a CSV file
-
  
-
 The first thing you want to do is generate a csv file using the "--csv" option in the script.  It is important to note that the script will only pull information from S5 messages that are prunes (by default).  The reason for this is to avoid duplicate data, which can scew the results. A session will get logged to syslog when it reaches the max queued bytes/segments, it will also get logged when it times out.  Typically, if the session exceeds the max_queued_bytes or max_queued_segments, it is likely that we are only seeing one side of the conversation, so snort will likely never see the full end of the session and a message will also be logged when it times out, so each session typcially has 2 messages logged.  Since the prune occurs last, data is pulled from these messages because they contain all flags set over the lifetime of the session and the flags set will be the final state.  If you want to override this behavior and have the script pull stats from all of the valid S5 messages, you can pass the "--all-data" flag when you run the command to generate the CSV. 
 
- 
 
 For example:
 
- 
-
 To generate csv file with default settings run:
-
- 
 
 getS5HostInfo --csv messages
 
- 
 
 To generate a csv file with all of the available data, run:
 
- 
-
 getS5HostInfo --all-data --csv messages
 
- 
 
 This will generate a csv file which contains all of the relevant S5 data.  The filename that is created will be in the following format:
 
- 
-
 <hostname>-<epoch_ts_of_first_message>-S5Info-uuid.csv
-
- 
 
 hostname - the hostname of the device (taken from the syslog messages).
 
@@ -257,92 +223,59 @@ epoch_ts_of_first_message - The epoch timestamp of the very first message in the
 
 uuid - a randomly generated uuid.
 
- 
-Process Multiple Files
 
- 
+<strong>Process Multiple Files</strong>
 
 The script only accepts one file at a time.  If you want to aggregrate the data from multiple syslog files, you can just concatenate one csv file into another. I recommend making an "all.csv" file and dumping all of the csv files into this file to avoid confusion.  For example:
 
- 
-
-[jgroetzi@tex2 var-log]$ getS5HostInfo --csv messages
-
+$ getS5HostInfo --csv messages
 ...
-
 CSV file: CD1IPS-INTBE1A-1415332927-S5Info-54861777aaba7.csv
 
- 
-
-[jgroetzi@tex2 var-log]$ getS5HostInfo --csv messages.1
-
- 
-
+$ getS5HostInfo --csv messages.1
+...
 CSV file: CD1IPS-INTBE1A-1415160126-S5Info-548619065b14d.csv
 
- 
+$ cat CD1IPS-INTBE1A-1415332927-S5Info-54861777aaba7.csv >> all.csv
 
-[jgroetzi@tex2 var-log]$ cat CD1IPS-INTBE1A-1415332927-S5Info-54861777aaba7.csv >> all.csv
+$ cat CD1IPS-INTBE1A-1415160126-S5Info-548619065b14d.csv >> all.csv
 
-[jgroetzi@tex2 var-log]$ cat CD1IPS-INTBE1A-1415160126-S5Info-548619065b14d.csv >> all.csv
-
- 
 
 Step 2: Generate the summary data
 
- 
-
 Once you have your csv file generated, you can generate a summary of the data using the "--summary" option.  By default, the script will print the summary to screen and to a summary file.  The name of the summary file will be "summary-<random_uuid>.  If you do not want this to print the summary to screen, pass the "-s" option to the script to put it into "silent" mode.  Examples:
-
- 
 
 Print to screen and summary file:
 
- 
+$ getS5HostInfo --summary all.csv
 
-[jgroetzi@tex2 var-log]$ getS5HostInfo --summary all.csv
-
- 
 
 Only print to summary file:
 
- 
-
-[jgroetzi@tex2 var-log]$ getS5HostInfo -s --summary all.csv
+$ getS5HostInfo -s --summary all.csv
 
  
-
 Step 3: Reading the Results
-
- 
 
 The summary report includes the following sections:
 
- 
-
 -Top sessions for syn_no_syn_ack - Top sessions where snort saw the initial syn, but did not see the initial syn/ack.
-
 -Top sessions for syn_ack_no_syn - Top sessions where snort saw the syn_ack, but did not see the initial syn.
-
 -Top sessions for client_no_server_count - Top sessions where snort saw traffic from the client, but never saw traffic from the server.
 -Top sessions for server_no_client_count - Top sessions where snort saw traffic from the server, but never saw traffic from the client.
 -Top Source ports seen - Listing of the top source ports seen and their count.
 -Top Dest ports seen - Listing of the top destination ports seen and their count.
 -Top Application Protocols Seen - List and count of top application protocols seen.
 -Stream5 State Summary - Summary of what S5 states were set.
-
 -Session Flags Summary - Summary of what S5 session flags were set.
 
  
-
 By default, the first 3 sections will be limited to the top 50.  If you want to override the limit, just pass the script the "--limit" flag followed by the limit you want to set (i.e. "getS5HostInfo --limit 100 --summary all.csv" will set the limit to the top 100).
 
+
+<strong>Example Output</strong>
+
  
-
-Example Output
-
- 
-
 Let's look at an example of summary output:
 
  
@@ -485,7 +418,6 @@ SSNFLAG_CLIENT_SWAPPED    :  0 (0.00%)
 
 Top sessions for syn_no_syn_ack
 
- 
 
 Client.IP -> Server.IP : number of sessions pruned.
 
@@ -499,10 +431,8 @@ Top sessions for syn_ack_no_syn
 
 Client.IP -> Server.IP : number of sessions pruned.
 
- 
 
 This will show the top sessions where snort saw the initial syn/ack packet from the server, but did not see the preceeding syn from the client. This can indicate "bad" traffic and potentially asynchronous traffic.
-
  
 
 Top sessions for client_no_server_count
@@ -510,27 +440,22 @@ Top sessions for client_no_server_count
 Client.IP -> Server.IP : number of sessions pruned.
 
  
-
 This shows the sessions where snort saw traffic from the Client.IP ONLY.  For sessions appearing in this list, snort never saw a single packet from the Server.IP.  These sessions are very likely to be asynchronous.
 
  
-
 Top sessions for server_no_client_count
 
 Client.IP -> Server.IP : number of sessions pruned.
 
  
-
 This shows the sessions where snort saw traffic from the Server.IP ONLY.  For sessions appearing in this list, snort never saw a single packet from the Client.IP.  These sessions are very likely to be asynchronous.
 
  
-
 Top Source ports seen
 
 Port : Times Seen
 
  
-
 This section lists the top source ports seen.  This probably won't be of much use, but it may help indicate what services are asynchrounous.
  
 
@@ -539,11 +464,9 @@ Top Dest ports seen
 Port : Times Seen
 
  
-
 This section lists the top destination ports seen.  This probably won't be of much use, but it may help indicate what services are asynchrounous.
 
  
-
 Top Application Protocols Seen
 
 AppID : Times Seen
@@ -552,24 +475,16 @@ AppID : Times Seen
 
 This lists the top AppIDs that snort reported with the sessions.  At this time I am unsure of where the mapping is, so this is reserved for future use and will be updated once there is a mapping.  It is not of much use currently.
 
- 
 
-Stream5 State Summary
-
- 
+<strong>Stream5 State Summary</strong>
 
 This section lists the stream5 states summary.  This section is useful for getting an overall picture of the states set in the sessions. For example, if you see a high percent for "Saw Client but not Server" then this indicates that snort is only seeing the client side of traffic and you should refer to the "top sessions for client_no_server_count" section for a list of the sessions.  In the example above, less than 1% of the sessions logged only saw the client and 99% of the sessions Saw the Server but not the Client, so the ""top sessions for server_no_client_count" section should be refered to.
  
 
-Session Flags Summary
-
- 
+<strong>Session Flags Summary</strong>
 
 This section lists the session flags summary.  This section is useful for getting an overall picture of the flags set in the sessions. This will give you some additional information on the traffic by looking for patterns on what flags are set the most often.
 
+<strong>Example Summary/Take Aways</strong>
  
-
-Example Summary/Take Aways
- 
-
-From this specific example, it can be determined that there is a problem with this traffic.  The problem appears to be that there is asynchronous traffic where the device is only seeing traffic from the servers, and is not seeing traffic from the clients. The customer should be provided with a list of the top sessions for server_no_client so that they can investigate why this traffic is not being seen by our device.
+From this specific example, it can be determined that there is a problem with this traffic. The problem appears to be that there is asymmetric traffic where the device is only seeing traffic from the servers, and is not seeing traffic from the clients.
